@@ -20,7 +20,11 @@ if 'bot' not in st.session_state:
     API_KEY = "TLRiOUwfrMG1gWmeg897cDbCnCOjcQ"
     API_SECRET = "Ws8eZKD2EyjaJJPzeBuaT9f0MQtUJu3ThRlLqGLTXS60UqfDmOJR58on7RXp"
     st.session_state.bot = DeltaIVCrushBot(API_KEY, API_SECRET, testnet=True)
+
+if 'auto_trade' not in st.session_state:
     st.session_state.auto_trade = False
+    
+if 'last_check' not in st.session_state:
     st.session_state.last_check = datetime.now()
 
 bot = st.session_state.bot
@@ -64,6 +68,40 @@ with col3:
 
 with col4:
     st.metric("🎯 Open Positions", stats['open_positions'])
+
+st.markdown("---")
+
+# TradingView Chart
+col_chart, col_tf = st.columns([4, 1])
+with col_chart:
+    st.subheader("📊 Live BTC Chart")
+with col_tf:
+    timeframe = st.selectbox("Timeframe", ["1", "5", "15", "30", "60", "240", "D"], index=1, label_visibility="collapsed")
+
+tradingview_html = f"""
+<div class="tradingview-widget-container" style="height:400px;">
+  <div id="tradingview_chart" style="height:100%;"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+  <script type="text/javascript">
+  new TradingView.widget({{
+    "width": "100%",
+    "height": 400,
+    "symbol": "BINANCE:BTCUSDT",
+    "interval": "{timeframe}",
+    "timezone": "Etc/UTC",
+    "theme": "dark",
+    "style": "1",
+    "locale": "en",
+    "toolbar_bg": "#f1f3f6",
+    "enable_publishing": false,
+    "hide_top_toolbar": false,
+    "save_image": false,
+    "container_id": "tradingview_chart"
+  }});
+  </script>
+</div>
+"""
+st.components.v1.html(tradingview_html, height=420)
 
 st.markdown("---")
 
