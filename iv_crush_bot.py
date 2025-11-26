@@ -23,6 +23,42 @@ class DeltaIVCrushBot:
         self.balance = 10000
         self.btc_products = {}
         self._load_products()
+        self._load_state()
+    
+    def _load_state(self):
+        """Load saved state from file"""
+        try:
+            with open('bot_state.json', 'r') as f:
+                data = json.load(f)
+                self.balance = data.get('balance', 10000)
+                self.positions = data.get('positions', [])
+                # Convert string dates back to datetime
+                for pos in self.positions:
+                    pos['entry_time'] = datetime.fromisoformat(pos['entry_time'])
+                    if pos.get('exit_time'):
+                        pos['exit_time'] = datetime.fromisoformat(pos['exit_time'])
+        except:
+            pass
+    
+    def _save_state(self):
+        """Save state to file"""
+        try:
+            data = {
+                'balance': self.balance,
+                'positions': []
+            }
+            # Convert datetime to string for JSON
+            for pos in self.positions:
+                pos_copy = pos.copy()
+                pos_copy['entry_time'] = pos['entry_time'].isoformat()
+                if pos.get('exit_time'):
+                    pos_copy['exit_time'] = pos['exit_time'].isoformat()
+                data['positions'].append(pos_copy)
+            
+            with open('bot_state.json', 'w') as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            print(f"Save error: {e}")
         
     def _sign(self, method, endpoint, payload=""):
         """Generate signature for Delta Exchange"""
@@ -214,6 +250,7 @@ class DeltaIVCrushBot:
         }
         
         self.positions.append(position)
+        self._save_state()
         return position
     
     def check_exit_conditions(self, position):
@@ -262,6 +299,7 @@ class DeltaIVCrushBot:
         position['time_in_trade'] = time_in_trade
         
         self.balance += pnl
+        self._save_state()
         
         return position
     
